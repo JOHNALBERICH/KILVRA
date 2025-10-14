@@ -29,7 +29,7 @@ namespace KILVRA.Controllers
             return View(cart); // Pass the cart (List<Product>) as the model
         }
 
-        public IActionResult CheckOut()
+ /*       public IActionResult CheckOut()
         {
             var cart = _cartService.GetOrderDetails();
             if (!cart.Any())
@@ -139,7 +139,7 @@ namespace KILVRA.Controllers
                 .FirstOrDefault();
 
             return View(order);
-        }
+        } */
         [HttpPost]
         public IActionResult RemoveFromCart(int productId, string size)
         {

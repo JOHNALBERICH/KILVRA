@@ -27,25 +27,30 @@ namespace KILVRA.Controllers
         [HttpPost]
         public IActionResult Register(User user, string password)
         {
+           ModelState.Remove("PasswordHash");
+            ModelState.Remove("Role");
             if (string.IsNullOrEmpty(password))
             {
                 ModelState.AddModelError("Password", "Password is required.");
-                return View();
+                return View(user);
             }
+            
             if (_context.Users.Any(u => u.Email == user.Email))
             {
                 ModelState.AddModelError("", "Email already registered.");
-                return View();
+                return View(user);
             }
             if(_context.Users.Any(u => u.FullName == user.FullName))
             {
                 ModelState.AddModelError("", "User name already exist");
-                return View();
+                return View(user);
             }
             if (ModelState.IsValid)
             {
+                user.Role = "User";
                 user.PasswordHash = HashPassword(password);
                 _context.Users.Add(user);
+                
                 _context.SaveChanges();
                 TempData["SuccessMessage"] = "Registration successful! You can now log in.";
                 return RedirectToAction("Login");

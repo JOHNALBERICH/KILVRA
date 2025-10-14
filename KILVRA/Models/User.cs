@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KILVRA.Models;
 
@@ -13,6 +14,7 @@ public partial class User
     [Required, StringLength(100)]
     [EmailAddress]
     public string Email { get; set; } = null!;
+    
     [Required, StringLength(255)]
     public string PasswordHash { get; set; } = null!;
     [StringLength(15)]

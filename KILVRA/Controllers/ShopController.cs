@@ -18,60 +18,46 @@ namespace KILVRA.Controllers
             _context = context;
         }
 
-        public IActionResult Index(string searchQuery, string size, decimal? minPrice, decimal? maxPrice)
+        public IActionResult Index(string searchQuery, string priceRange, string size)
         {
             var products = _context.Products.AsQueryable();
-            string priceRange = Request.Query["priceRange"];
 
-            if (!string.IsNullOrEmpty(priceRange))
-            {
-                var parts = priceRange.Split('-');
-                if (parts.Length == 2)
-                {
-                    minPrice = decimal.Parse(parts[0]);
-                    maxPrice = decimal.Parse(parts[1]);
-                }
-            }
-            // 🔍 Search by product name
             if (!string.IsNullOrEmpty(searchQuery))
             {
                 products = products.Where(p => p.Name.Contains(searchQuery));
+                ViewBag.SearchQuery = searchQuery;
+            }
+            else
+            {
+                ViewBag.SearchQuery = "";
             }
 
-            // 🧤 Filter by size
+            if (!string.IsNullOrEmpty(priceRange))
+            {
+                var range = priceRange.Split('-');
+                if (range.Length == 2 && decimal.TryParse(range[0], out var min) && decimal.TryParse(range[1], out var max))
+                {
+                    products = products.Where(p => p.Price >= min && p.Price <= max);
+                }
+                ViewBag.SelectedPriceRange = priceRange;
+            }
+            else
+            {
+                ViewBag.SelectedPriceRange = "";
+            }
+
+            // Fix: Only filter by size if not null or empty AND not All Size (empty string)
             if (!string.IsNullOrEmpty(size))
             {
-                products = products.Where(p => p.Size == size);
+                products = products.Where(p => p.Size != null && p.Size.Contains(size));
+                ViewBag.SelectedSize = size;
             }
-
-            // 💰 Filter by price range
-            if (minPrice.HasValue)
+            else
             {
-                products = products.Where(p => p.Price >= minPrice.Value);
-            }
-            if (maxPrice.HasValue)
-            {
-                products = products.Where(p => p.Price <= maxPrice.Value);
+                ViewBag.SelectedSize = "";
             }
 
-            var result = products
-                .OrderByDescending(p => p.CreatedAt)
-                .ToList();
-
-            // Keep current filters for UI state
-            ViewBag.SearchQuery = searchQuery;
-            ViewBag.Size = size;
-            ViewBag.MinPrice = minPrice;
-            ViewBag.MaxPrice = maxPrice;
-
-            return View(result);
-        }
-        // GET: Shop
-        [HttpGet]
-        public async Task<IActionResult> Index()
-        {
-            var onlineClothesShopContext = _context.Products.Include(p => p.Shop);
-            return View(await onlineClothesShopContext.ToListAsync());
+            return View(products.Include(p => p.Shop).ToList());
         }
 
         // GET: Shop/Details/5
@@ -160,16 +146,14 @@ namespace KILVRA.Controllers
             {
                 return NotFound();
             }
-            ViewData["ProductId"] = new SelectList(_context.Shops, "ProductId", "ShopName", product.ProductId);
+            ViewData["ShopId"] = new SelectList(_context.Shops, "ShopId", "ShopName", product.ShopId);
             return View(product);
         }
 
         // POST: Shop/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ProductId,ProductId,Name,Description,Price,Quantity,Category,ImageUrl,CreatedAt")] Product product)
+        public async Task<IActionResult> Edit(int id, Product product, IFormFile imageFile)
         {
             if (id != product.ProductId)
             {
@@ -180,6 +164,21 @@ namespace KILVRA.Controllers
             {
                 try
                 {
+                    if (imageFile != null && imageFile.Length > 0)
+                    {
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+                        var uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await imageFile.CopyToAsync(fileStream);
+                        }
+                        product.ImageUrl = "/images/" + uniqueFileName;
+                    }
                     _context.Update(product);
                     await _context.SaveChangesAsync();
                 }
@@ -196,7 +195,7 @@ namespace KILVRA.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ProductId"] = new SelectList(_context.Shops, "ProductId", "ShopName", product.ProductId);
+            ViewData["ShopId"] = new SelectList(_context.Shops, "ShopId", "ShopName", product.ShopId);
             return View(product);
         }
         
@@ -249,5 +248,28 @@ namespace KILVRA.Controllers
 
             return View(newProducts);
         }
+        public IActionResult Shop(string category = null)
+        {
+            // Get all products
+            var products = _context.Products.AsQueryable();
+
+            // Filter by category if one is selected
+            if (!string.IsNullOrEmpty(category))
+            {
+                products = products.Where(p => p.Category == category);
+            }
+
+            // Get distinct categories for the sidebar
+            var categories = _context.Products
+                .Select(p => p.Category)
+                .Where(c => c != null)
+                .Distinct()
+                .ToList();
+
+            // Pass both to the view
+            ViewBag.Categories = categories;
+            return View(products.ToList());
+        }
+
     }
 }

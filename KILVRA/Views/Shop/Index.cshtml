@@ -82,79 +82,77 @@
 <!-- Shop Start -->
 <div class="container-fluid pt-5">
     <div class="row px-xl-5">
+
         <!-- Shop Sidebar Start -->
         <div class="col-lg-3 col-md-12">
-            <!-- Price Start -->
+            <!-- Price & Size Filter Start -->
             <div class="border-bottom mb-4 pb-4">
-                <h5 class="font-weight-semi-bold mb-4">Filter by price</h5>
                 <form asp-action="Index" method="get" id="filterForm">
-                    <div class="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3">
-                        <input type="checkbox" class="custom-control-input" checked id="price-all">
-                        <label class="custom-control-label" for="price-all">All Price</label>
-                        <span class="badge border font-weight-normal">1000</span>
+                    <h5 class="font-weight-semi-bold mb-4 mt-4">Search by name</h5>
+                    <div class="input-group mb-3">
+                        <input type="text" name="searchQuery" value="@ViewBag.SearchQuery" class="form-control" placeholder="Search by name">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <span class="input-group-text bg-transparent text-primary">
+                                    <i class="fa fa-search"></i>
+                                </span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3">
-                        <input type="checkbox" class="custom-control-input" id="price-1" value="0-500000">
-                        <label class="custom-control-label" for="price-1">0 - 500K</label>
-                        <span class="badge border font-weight-normal">150</span>
+                    <h5 class="font-weight-semi-bold mb-4">Filter by price</h5>
+                    <div>
+                        <div class="custom-control custom-radio mb-2">
+                            <input type="radio" class="custom-control-input" id="price-all" name="priceRange" value="" @(string.IsNullOrEmpty(ViewBag.SelectedPriceRange) ? "checked" : "") onchange="this.form.submit()">
+                            <label class="custom-control-label" for="price-all">All Price</label>
+                        </div>
+                        <div class="custom-control custom-radio mb-2">
+                            <input type="radio" class="custom-control-input" id="price-1" name="priceRange" value="0-500000" @(ViewBag.SelectedPriceRange == "0-500000" ? "checked" : "") onchange="this.form.submit()">
+                            <label class="custom-control-label" for="price-1">0 - 500K</label>
+                        </div>
+                        <div class="custom-control custom-radio mb-2">
+                            <input type="radio" class="custom-control-input" id="price-2" name="priceRange" value="500000-1000000" @(ViewBag.SelectedPriceRange == "500000-1000000" ? "checked" : "") onchange="this.form.submit()">
+                            <label class="custom-control-label" for="price-2">500k - 1M</label>
+                        </div>
+                        <div class="custom-control custom-radio mb-2">
+                            <input type="radio" class="custom-control-input" id="price-3" name="priceRange" value="1000000-2000000" @(ViewBag.SelectedPriceRange == "1000000-2000000" ? "checked" : "") onchange="this.form.submit()">
+                            <label class="custom-control-label" for="price-3">1,5M - 2M</label>
+                        </div>
+                        <div class="custom-control custom-radio mb-2">
+                            <input type="radio" class="custom-control-input" id="price-4" name="priceRange" value="2000000-2500000" @(ViewBag.SelectedPriceRange == "2000000-2500000" ? "checked" : "") onchange="this.form.submit()">
+                            <label class="custom-control-label" for="price-4">2M - 2,5M</label>
+                        </div>
+                        <div class="custom-control custom-radio mb-2">
+                            <input type="radio" class="custom-control-input" id="price-5" name="priceRange" value="2500000-3000000" @(ViewBag.SelectedPriceRange == "2500000-3000000" ? "checked" : "") onchange="this.form.submit()">
+                            <label class="custom-control-label" for="price-5">2,5M - 3M</label>
+                        </div>
                     </div>
-                    <div class="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3">
-                        <input type="checkbox" class="custom-control-input" name="priceRange" id="price-2" value="500000-1000000">
-                        <label class="custom-control-label" for="price-2">500k - 1M</label>
-                        <span class="badge border font-weight-normal">295</span>
+                    <h5 class="font-weight-semi-bold mb-4 mt-4">Filter by size</h5>
+                    <div>
+                        <div class="custom-control custom-radio mb-2">
+                            <input type="radio" class="custom-control-input" id="size-all" name="size" value="" @(string.IsNullOrEmpty(ViewBag.SelectedSize) ? "checked" : "") onchange="this.form.submit()">
+                            <label class="custom-control-label" for="size-all">All Size</label>
+                        </div>
+                        <div class="custom-control custom-radio mb-2">
+                            <input type="radio" class="custom-control-input" id="size-s" name="size" value="S" @(ViewBag.SelectedSize == "S" ? "checked" : "") onchange="this.form.submit()">
+                            <label class="custom-control-label" for="size-s">S</label>
+                        </div>
+                        <div class="custom-control custom-radio mb-2">
+                            <input type="radio" class="custom-control-input" id="size-m" name="size" value="M" @(ViewBag.SelectedSize == "M" ? "checked" : "") onchange="this.form.submit()">
+                            <label class="custom-control-label" for="size-m">M</label>
+                        </div>
+                        <div class="custom-control custom-radio mb-2">
+                            <input type="radio" class="custom-control-input" id="size-l" name="size" value="L" @(ViewBag.SelectedSize == "L" ? "checked" : "") onchange="this.form.submit()">
+                            <label class="custom-control-label" for="size-l">L</label>
+                        </div>
+                        <div class="custom-control custom-radio mb-2">
+                            <input type="radio" class="custom-control-input" id="size-xl" name="size" value="XL" @(ViewBag.SelectedSize == "XL" ? "checked" : "") onchange="this.form.submit()">
+                            <label class="custom-control-label" for="size-xl">XL</label>
+                        </div>
                     </div>
-                    <div class="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3">
-                        <input type="checkbox" class="custom-control-input" name="priceRange" id="price-3" value="1000000-1500000">
-                        <label class="custom-control-label" for="price-3">1,5M - 2M</label>
-                        <span class="badge border font-weight-normal">246</span>
-                    </div>
-                    <div class="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3">
-                        <input type="checkbox" class="custom-control-input" name="priceRange" id="price-4" value="2000000-2500000">
-                        <label class="custom-control-label" for="price-4">2M - 2,5M</label>
-                        <span class="badge border font-weight-normal">145</span>
-                    </div>
-                    <div class="custom-control custom-checkbox d-flex align-items-center justify-content-between">
-                        <input type="checkbox" class="custom-control-input" name="priceRange" id="price-5" value="2500000-3000000">
-                        <label class="custom-control-label" for="price-5">2,5M - 3M</label>
-                        <span class="badge border font-weight-normal">168</span>
-                    </div>
+ 
                 </form>
             </div>
-            <!-- Price End -->
-            <!-- Size Start -->
-            <div class="mb-5">
-                <h5 class="font-weight-semi-bold mb-4">Filter by size</h5>
-                <form asp-action="Index" method="get" id="filterForm">
-                    <div class="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3">
-                        <input type="checkbox" class="custom-control-input" checked id="size-all">
-                        <label class="custom-control-label" for="size-all">All Size</label>
-                        <span class="badge border font-weight-normal">1000</span>
-                    </div>
-                   
-                    <div class="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3">
-                        <input type="checkbox" class="custom-control-input" name="size" id="size-1" value="S">
-                        <label class="custom-control-label" for="size-2">S</label>
-                        <span class="badge border font-weight-normal">295</span>
-                    </div>
-                    <div class="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3">
-                        <input type="checkbox" class="custom-control-input" " name="size" id="size-2" value="M">
-                        <label class="custom-control-label" for="size-3">M</label>
-                        <span class="badge border font-weight-normal">246</span>
-                    </div>
-                    <div class="custom-control custom-checkbox d-flex align-items-center justify-content-between mb-3">
-                        <input type="checkbox" class="custom-control-input" id="size-3">
-                        <label class="custom-control-label" for="size-4">L</label>
-                        <span class="badge border font-weight-normal">145</span>
-                    </div>
-                    <div class="custom-control custom-checkbox d-flex align-items-center justify-content-between">
-                        <input type="checkbox" class="custom-control-input" name="size" id="size-4" value="XL">
-                        <label class="custom-control-label" for="size-5">XL</label>
-                        <span class="badge border font-weight-normal">168</span>
-                    </div>
-                    
-                </form>
-            </div>
-            <!-- Size End -->
+            <!-- Price & Size Filter End -->
         </div>
         <!-- Shop Sidebar End -->
         <!-- Shop Product Start -->
@@ -162,16 +160,8 @@
             <div class="row pb-3">
                 <div class="col-12 pb-1">
                     <div class="d-flex align-items-center justify-content-between mb-4">
-                        <form asp-action="Index" method="get" class="mb-4">
-                            <div class="input-group">
-                                <input type="text" name="searchQuery" value="@ViewBag.searchQuery" class="form-control" placeholder="Search by name">
-                                <div class="input-group-append">
-                                    <span class="input-group-text bg-transparent text-primary">
-                                        <i class="fa fa-search"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </form>
+                        <!-- Search moved to sidebar filter form -->
+                        <div></div>
                         <div class="dropdown ml-4">
                             <button class="btn border dropdown-toggle" type="button" id="triggerId" data-toggle="dropdown" aria-haspopup="true"
                                     aria-expanded="false">
@@ -200,7 +190,7 @@
                             </div>
                             <div class="card-footer d-flex justify-content-between bg-light border">
                                 <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-sm text-dark p-0"><i class="fas fa-eye text-primary mr-1"></i>View Detail</a>
-                                <a asp-action="AddCart" asp-route-id="@item.ProductId" class="btn btn-sm text-dark p-0"><i class="fas fa-shopping-cart text-primary mr-1"></i>Add To Cart</a>
+                                <a asp-controller="Order" asp-action="Index" asp-route-id="@item.ProductId" class="btn btn-sm text-dark p-0"><i class="fas fa-shopping-cart text-primary mr-1"></i>Add To Cart</a>
                             </div>
                         </div>
                     </div>

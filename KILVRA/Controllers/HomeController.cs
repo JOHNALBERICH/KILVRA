@@ -48,7 +48,10 @@ namespace KILVRA.Controllers
         {
             return RedirectToAction("Create", "ShopsLocation");
         }
-        
+        public IActionResult Order()
+        {
+            return RedirectToAction("Index", "Order");
+        }
 
         
         public IActionResult Login()

@@ -29,7 +29,7 @@ namespace KILVRA.Controllers
             return View(cart); // Pass the cart (List<Product>) as the model
         }
 
- /*       public IActionResult CheckOut()
+        public IActionResult CheckOut()
         {
             var cart = _cartService.GetOrderDetails();
             if (!cart.Any())
@@ -69,7 +69,12 @@ namespace KILVRA.Controllers
                 OrderDate = DateTime.Now,
                 TotalAmount = model.Total,
                 Status = "Pending",
-                PaymentMethod = model.PaymentMethod
+                Payment = new Payment
+                {
+                    PaymentMethod = model.PaymentMethod,
+                    AmountPaid = model.Total,
+                    PaymentDate = DateTime.Now
+                }
             };
             _context.Orders.Add(order);
             _context.SaveChanges();
@@ -82,7 +87,7 @@ namespace KILVRA.Controllers
                     OrderId = order.OrderId,
                     ProductId = item.ProductId,
                     Quantity = (item.Quantity ?? 0),
-                    Size = item.Size
+                    
                 };
                 _context.OrderDetails.Add(detail);
             }
@@ -139,7 +144,7 @@ namespace KILVRA.Controllers
                 .FirstOrDefault();
 
             return View(order);
-        } */
+        } 
         [HttpPost]
         public IActionResult RemoveFromCart(int productId, string size)
         {

@@ -27,4 +27,6 @@ public partial class Order
     public virtual Payment? Payment { get; set; }
     [ForeignKey("UserId")]
     public virtual User User { get; set; } = null!;
+   
+
 }

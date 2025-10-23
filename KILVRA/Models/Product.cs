@@ -20,14 +20,16 @@ public partial class Product
     public decimal Price { get; set; }
     [Required]
     public int? Quantity { get; set; }
-    [StringLength(50)]
-    public string? Category { get; set; }
+    
     [StringLength(20)]
     public string? Size { get; set; }
 
     public string? ImageUrl { get; set; }
-    
 
+    public int? CategoryId { get; set; }
+
+    [ForeignKey("CategoryId")]
+    public virtual Category? Category { get; set; }
     public DateTime? CreatedAt { get; set; } = DateTime.Now;
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();

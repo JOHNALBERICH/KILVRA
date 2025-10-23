@@ -256,7 +256,7 @@ namespace KILVRA.Controllers
             // Filter by category if one is selected
             if (!string.IsNullOrEmpty(category))
             {
-                products = products.Where(p => p.Category == category);
+                products = products.Where(p => p.Category.Name == category);
             }
 
             // Get distinct categories for the sidebar

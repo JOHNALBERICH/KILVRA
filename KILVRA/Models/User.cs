@@ -29,4 +29,5 @@ public partial class User
     public virtual Admin? Admin { get; set; }
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+    public ICollection<Favorite> Favorites { get; set; }
 }

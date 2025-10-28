@@ -134,8 +134,28 @@ namespace KILVRA.Controllers
             _context.SaveChanges();
 
             _cartService.ClearCart();
+            try
+            {
+                // Example: save order to database or perform payment
+                bool success = true; // change this based on your logic
 
-            return RedirectToAction("Success", new { id = order.OrderId });
+                if (success)
+                {
+                    TempData["SuccessMessage"] = "🎉 Your order has been placed successfully!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "❌ Something went wrong while placing your order.";
+                }
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "⚠️ An unexpected error occurred. Please try again.";
+            }
+
+//            return RedirectToAction("View"); // reloads the checkout page
+
+          return RedirectToAction("Success", new { id = order.OrderId });
         }
         public IActionResult Success(int id)
         {
@@ -182,6 +202,39 @@ namespace KILVRA.Controllers
         private bool OrderDetailExists(int id)
         {
             return _context.OrderDetails.Any(e => e.OrderDetailId == id);
+        }
+        [HttpPost]
+        public async Task<IActionResult> ApplyCoupon(string couponCode)
+        {
+            if (string.IsNullOrWhiteSpace(couponCode))
+            {
+                TempData["Error"] = "Please enter a coupon code.";
+                return RedirectToAction("Index");
+            }
+
+            var coupon = await _context.Coupon
+                .FirstOrDefaultAsync(c => c.Code == couponCode && c.IsActive);
+
+            if (coupon == null || (coupon.ExpiryDate.HasValue && coupon.ExpiryDate < DateTime.Now))
+            {
+                TempData["Error"] = "Invalid or expired coupon.";
+                return RedirectToAction("Index");
+            }
+
+            // Example: calculate total and apply discount
+            decimal total = _cartService.GetTotal(); // your method to calculate total
+            decimal discountAmount = total * (coupon.DiscountPercent / 100);
+            decimal finalTotal = total - discountAmount;
+
+            // Store the values in ViewBag or TempData
+            ViewBag.Total = total;
+            ViewBag.Discount = discountAmount;
+            ViewBag.FinalTotal = finalTotal;
+            ViewBag.AppliedCoupon = coupon.Code;
+
+            TempData["Success"] = $"Coupon '{coupon.Code}' applied successfully!";
+
+            return View("Index", _cartService.GetOrderDetails());
         }
     }
 }

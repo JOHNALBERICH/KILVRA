@@ -5,11 +5,19 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.IO;
+using Microsoft.AspNetCore.Identity;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddRazorOptions(options =>
+    {
+        // Support both the conventional 'Areas' folder and the existing 'Area' folder in this project
+        options.AreaViewLocationFormats.Add("/Area/{2}/Views/{1}/{0}.cshtml");
+        options.AreaViewLocationFormats.Add("/Area/{2}/Views/Shared/{0}.cshtml");
+    });
 
 builder.Services.AddDbContext<OnlineClothesShopContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -28,6 +36,15 @@ builder.Services.AddSession();
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(@"C:\DataProtectionKeys"))
     .SetApplicationName("KILVRAApp");
+//builder.Services.AddIdentity<User, Admin>()
+//    .AddEntityFrameworkStores<OnlineClothesShopContext>()
+ //   .AddDefaultTokenProviders();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Admin/Account/Login";
+    options.AccessDeniedPath = "/Admin/Account/AccessDenied";
+});
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -54,17 +71,27 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+// Serve static files (wwwroot) so CSS/JS referenced with ~/ are accessible
+app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+// Area route: correct default controller name and also support URLs that include the literal 'Area' prefix
+app.MapControllerRoute(
+    name: "areas_with_area_prefix",
+    pattern: "Area/{area:exists}/{controller=Dashboards}/{action=Index}/{id?}");
 
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Dashboards}/{action=Index}/{id?}");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
 
 
 app.Run();

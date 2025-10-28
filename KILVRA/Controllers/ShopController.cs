@@ -6,21 +6,51 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using KILVRA.Models;
+using KILVRA.Services;
 
 namespace KILVRA.Controllers
 {
     public class ShopController : Controller
     {
         private readonly OnlineClothesShopContext _context;
+       
 
         public ShopController(OnlineClothesShopContext context)
         {
             _context = context;
+            
         }
+        [HttpGet("Shop/ByCategory/{categoryId}")]
+        public IActionResult ByCategory(int categoryId)
+        {
+            var category = _context.Categories.Find(categoryId);
 
+            if (category == null)
+                return NotFound();
+
+            var products = _context.Products
+                                   .Include(p => p.Category)
+                                   .Where(p => p.CategoryId == categoryId)
+                                   .ToList();
+
+            if (products.Count == 0)
+            {
+                ViewBag.Message = $"No products found in category '{category.Name}'";
+            }
+
+            ViewBag.CategoryName = category.Name;
+            return View("Index", products);
+        }
+        
+         // Show all products
+        [HttpGet]
         public IActionResult Index(string searchQuery, string priceRange, string size)
         {
-            var products = _context.Products.AsQueryable();
+            var products = _context.Products
+         .Include(p => p.Category)
+         .Include(p => p.Shop)
+         .AsQueryable();
+
 
             if (!string.IsNullOrEmpty(searchQuery))
             {
@@ -85,6 +115,7 @@ namespace KILVRA.Controllers
         public IActionResult Create()
         {
             ViewData["ShopId"] = new SelectList(_context.Shops, "ShopId", "ShopName");
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name");
             return View();
         }
         [HttpPost]
@@ -113,6 +144,7 @@ namespace KILVRA.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["ShopId"] = new SelectList(_context.Shops, "ShopId", "ShopName", product.ShopId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name");
             return View(product);
         }
         // POST: Shop/Create
@@ -147,6 +179,7 @@ namespace KILVRA.Controllers
                 return NotFound();
             }
             ViewData["ShopId"] = new SelectList(_context.Shops, "ShopId", "ShopName", product.ShopId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name");
             return View(product);
         }
 
@@ -196,6 +229,7 @@ namespace KILVRA.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["ShopId"] = new SelectList(_context.Shops, "ShopId", "ShopName", product.ShopId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name");
             return View(product);
         }
         
@@ -270,6 +304,7 @@ namespace KILVRA.Controllers
             ViewBag.Categories = categories;
             return View(products.ToList());
         }
+       
 
     }
 }

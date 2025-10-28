@@ -1,0 +1,37 @@
+﻿@model KILVRA.Models.Order
+@{
+    ViewData["Title"] = "Success";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container text-center my-5">
+    <div class="alert alert-success p-4 rounded shadow-sm">
+        <h2 class="mb-3">🎉 Order Placed Successfully!</h2>
+        <p>Thank you for your purchase, your order number is <strong>#@Model.OrderId</strong>.</p>
+        
+    </div>
+
+    <div class="card mt-4 mx-auto" style="max-width: 600px;">
+        <div class="card-header bg-primary text-white">
+            <h5>Your Order Summary</h5>
+        </div>
+        <div class="card-body">
+            @foreach (var item in Model.OrderDetails)
+            {
+                <div class="d-flex justify-content-between border-bottom py-2">
+                    <span>@item.Product.Name (x@item.Quantity)</span>
+                    <span>$@item.UnitPrice</span>
+                </div>
+            }
+            <div class="d-flex justify-content-between mt-3">
+                <strong>Total:</strong>
+                <strong>$@Model.TotalAmount</strong>
+            </div>
+        </div>
+    </div>
+
+    <a asp-controller="Shop" asp-action="Index" class="btn btn-outline-primary mt-4">
+        Continue Shopping
+    </a>
+</div>
+

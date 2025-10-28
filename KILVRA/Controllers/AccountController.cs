@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 
 using System.Security.Claims;
 namespace KILVRA.Controllers
@@ -14,6 +15,30 @@ namespace KILVRA.Controllers
         public AccountController(OnlineClothesShopContext context)
         {
             _context = context;
+        }
+        [HttpGet]
+        public IActionResult Profiles()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId == null)
+            {
+                return RedirectToAction("Login");
+            }
+            var User = _context.Users.Include(c => c.Orders)
+                .ThenInclude(o => o.OrderDetails)
+                    .ThenInclude(oi => oi.Product)
+            .Include(c => c.Favorites)
+                .ThenInclude(f => f.Product)
+            .FirstOrDefault(c => c.UserId == userId);
+
+
+            if (User == null)
+            {
+                return NotFound();
+            }
+
+            return View("Profiles", User);
         }
         private string HashPassword(string password)
         {

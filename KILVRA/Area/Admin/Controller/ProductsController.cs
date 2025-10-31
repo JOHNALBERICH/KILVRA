@@ -9,6 +9,7 @@ using KILVRA.Models;
 
 namespace KILVRA.Area.Admin.Controller
 {
+    [Area("Admin")]
     public class ProductsController : Microsoft.AspNetCore.Mvc.Controller
     {
         private readonly OnlineClothesShopContext _context;
@@ -45,29 +46,41 @@ namespace KILVRA.Area.Admin.Controller
             return View(product);
         }
 
-        // GET: Products/Create
+        // GET: Shop/Create
+        [HttpGet]
         public IActionResult Create()
         {
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name");
             ViewData["ShopId"] = new SelectList(_context.Shops, "ShopId", "ShopName");
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name");
             return View();
         }
-
-        // POST: Products/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProductId,ShopId,Name,Description,Price,Quantity,Size,ImageUrl,CategoryId,CreatedAt")] Product product)
+        public async Task<IActionResult> Create(Product product, IFormFile imageFile)
         {
             if (ModelState.IsValid)
             {
+                if (imageFile != null && imageFile.Length > 0)
+                {
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await imageFile.CopyToAsync(fileStream);
+                    }
+                    product.ImageUrl = "/images/" + uniqueFileName;
+                }
                 _context.Add(product);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
             ViewData["ShopId"] = new SelectList(_context.Shops, "ShopId", "ShopName", product.ShopId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name");
             return View(product);
         }
 

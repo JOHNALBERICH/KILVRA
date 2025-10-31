@@ -29,7 +29,7 @@
                 @Html.DisplayNameFor(model => model.Size)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ImageUrl)
+                 Image
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Category)
@@ -62,7 +62,14 @@
                 @Html.DisplayFor(modelItem => item.Size)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.ImageUrl)
+                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                {
+                    <img src="@Url.Content(item.ImageUrl)" alt="@item.Name" style="max-width:120px; max-height:120px;" />
+                }
+                else
+                {
+                    <span class="text-muted">No image</span>
+                }
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Category.Name)

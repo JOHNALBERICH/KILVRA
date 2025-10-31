@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KILVRA.Migrations
 {
     [DbContext(typeof(OnlineClothesShopContext))]
-    [Migration("20251028012141_AddCouponTable")]
-    partial class AddCouponTable
+    [Migration("20251029075511_ReAddCoupontable")]
+    partial class ReAddCoupontable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,33 @@ namespace KILVRA.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("KILVRA.Area.Admin.Models.Coupon", b =>
+                {
+                    b.Property<int>("CouponId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CouponId"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("DiscountPercent")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.HasKey("CouponId");
+
+                    b.ToTable("Coupon");
+                });
 
             modelBuilder.Entity("KILVRA.Models.Admin", b =>
                 {

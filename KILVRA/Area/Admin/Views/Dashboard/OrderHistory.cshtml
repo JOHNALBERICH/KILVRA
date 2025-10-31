@@ -1,0 +1,43 @@
+@model IEnumerable<KILVRA.Models.Order>?
+
+<h2>Order History for @ViewBag.User?.FullName</h2>
+
+@if (Model == null || !Model.Any())
+{
+ <p>No orders found for this user.</p>
+}
+else
+{
+ <table class="table">
+ <thead>
+ <tr>
+ <th>Order ID</th>
+ <th>Date</th>
+ <th>Total</th>
+ <th>Status</th>
+ <th>Payment</th>
+ <th>Details</th>
+ </tr>
+ </thead>
+ <tbody>
+ @foreach (var order in Model)
+ {
+ <tr>
+ <td>@order.OrderId</td>
+ <td>@order.OrderDate</td>
+ <td>@order.TotalAmount</td>
+ <td>@order.Status</td>
+ <td>@order.Payment?.PaymentStatus</td>
+ <td>
+ <ul>
+ @foreach (var od in order.OrderDetails)
+ {
+ <li>@od.Product?.Name - @od.Quantity x @od.UnitPrice (@od.SubTotal)</li>
+ }
+ </ul>
+ </td>
+ </tr>
+ }
+ </tbody>
+ </table>
+}

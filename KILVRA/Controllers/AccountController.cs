@@ -5,7 +5,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.AspNetCore.Authentication.Google;
 using System.Security.Claims;
 namespace KILVRA.Controllers
 {
@@ -105,8 +105,8 @@ namespace KILVRA.Controllers
                 new Claim(ClaimTypes.Name, user.FullName),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim("UserId", user.UserId.ToString()),
-                new Claim("Phone",user.Phone.ToString()),
-                new Claim("Address",user.Address.ToString())
+                new Claim("Phone", user.Phone ?? string.Empty),
+                new Claim("Address", user.Address ?? string.Empty)
 
             };
             if (user != null)
@@ -135,7 +135,7 @@ namespace KILVRA.Controllers
         }
 
         // ========================= SOCIAL LOGIN =========================
-        /*        public IActionResult GoogleLogin()
+               public IActionResult GoogleLogin()
                {
                    var properties = new AuthenticationProperties { RedirectUri = Url.Action("GoogleResponse") };
                    return Challenge(properties, GoogleDefaults.AuthenticationScheme);
@@ -143,26 +143,59 @@ namespace KILVRA.Controllers
 
                public async Task<IActionResult> GoogleResponse()
                {
-                   var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                   // Authenticate the Google external login
+                   var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
+                   if (!result.Succeeded)
+                   {
+                       return RedirectToAction("Login");
+                   }
+
                    var email = result.Principal.FindFirst(ClaimTypes.Email)?.Value;
                    var name = result.Principal.FindFirst(ClaimTypes.Name)?.Value;
+
+                   if (string.IsNullOrEmpty(email))
+                   {
+                       // Email is required for application users
+                       return RedirectToAction("Login");
+                   }
 
                    var user = _context.Users.FirstOrDefault(u => u.Email == email);
                    if (user == null)
                    {
+                       // Ensure we populate required fields to avoid DB insert errors
                        user = new User
                        {
-                           FullName = name,
+                           FullName = name ?? email,
                            Email = email,
-                           Provider = "Google"
+                           Provider = "Google",
+                           Role = "User",
+                           Address = string.Empty,
+                           // Create a random password hash for external users
+                           PasswordHash = HashPassword(Guid.NewGuid().ToString())
                        };
                        _context.Users.Add(user);
                        _context.SaveChanges();
                    }
 
+                   // Sign in the user with cookie authentication
+                   var claims = new List<Claim>
+                   {
+                       new Claim(ClaimTypes.Name, user.FullName),
+                       new Claim(ClaimTypes.Email, user.Email),
+                       new Claim("UserId", user.UserId.ToString()),
+                       new Claim("Phone", user.Phone ?? string.Empty),
+                       new Claim("Address", user.Address ?? string.Empty)
+                   };
+
+                   var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                   await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+
+                   HttpContext.Session.SetString("UserName", user.FullName);
+                   HttpContext.Session.SetInt32("UserId", user.UserId);
+
                    return RedirectToAction("Index", "Home");
                }
-       */
+       
         // ========================= UTIL =========================
        
     }

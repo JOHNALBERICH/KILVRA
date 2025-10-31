@@ -26,6 +26,19 @@ namespace KILVRA.Controllers
             ViewBag.Subtotal = _cartService.GetSubtotal();
             ViewBag.Shipping = _cartService.GetShippingFee();
             ViewBag.Total = _cartService.GetTotal();
+            // If coupon applied, show discount and adjusted total
+            var appliedCode = HttpContext.Session.GetString("AppliedCouponCode");
+            if (!string.IsNullOrEmpty(appliedCode))
+            {
+                if (decimal.TryParse(HttpContext.Session.GetString("AppliedCouponPercent"), out var pct))
+                {
+                    var total = _cartService.GetTotal();
+                    var discount = total * (pct /100m);
+                    ViewBag.Discount = discount;
+                    ViewBag.Total = total - discount;
+                    ViewBag.AppliedCoupon = appliedCode;
+                }
+            }
             return View(cart); // Pass the cart (List<Product>) as the model
         }
 
@@ -38,13 +51,28 @@ namespace KILVRA.Controllers
                 return RedirectToAction("Index");
             }
 
+            // Calculate totals and apply coupon stored in session (if any)
+            decimal subtotal = _cartService.GetSubtotal();
+            decimal shipping = _cartService.GetShippingFee();
+            decimal total = _cartService.GetTotal();
+            decimal discountAmount =0m;
+            var appliedCode = HttpContext.Session.GetString("AppliedCouponCode");
+            if (!string.IsNullOrEmpty(appliedCode) && decimal.TryParse(HttpContext.Session.GetString("AppliedCouponPercent"), out var pct))
+            {
+                discountAmount = total * (pct /100m);
+                total = total - discountAmount;
+            }
+
             var vm = new CheckoutViewModel
             {
                 CartItems = cart,
-                Subtotal = _cartService.GetSubtotal(),
-                Shipping = _cartService.GetShippingFee(),
-                Total = _cartService.GetTotal()
+                Subtotal = subtotal,
+                Shipping = shipping,
+                Total = total
             };
+
+            ViewBag.AppliedCoupon = appliedCode;
+            ViewBag.Discount = discountAmount;
 
             return View(vm);
         }
@@ -63,16 +91,36 @@ namespace KILVRA.Controllers
                 return View(model);
             }
 
+            // Ensure user is signed in and attach UserId
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Recalculate totals server-side and apply coupon from session
+            decimal subtotal = _cartService.GetSubtotal();
+            decimal shipping = _cartService.GetShippingFee();
+            decimal total = _cartService.GetTotal();
+            decimal discountAmount =0m;
+            var appliedCode = HttpContext.Session.GetString("AppliedCouponCode");
+            if (!string.IsNullOrEmpty(appliedCode) && decimal.TryParse(HttpContext.Session.GetString("AppliedCouponPercent"), out var pct))
+            {
+                discountAmount = total * (pct /100m);
+                total = total - discountAmount;
+            }
+
             // Create Order
             var order = new Order
             {
+                UserId = userId.Value,
                 OrderDate = DateTime.Now,
-                TotalAmount = model.Total,
+                TotalAmount = total,
                 Status = "Pending",
                 Payment = new Payment
                 {
                     PaymentMethod = model.PaymentMethod,
-                    AmountPaid = model.Total,
+                    AmountPaid = total,
                     PaymentDate = DateTime.Now
                 }
             };
@@ -86,17 +134,30 @@ namespace KILVRA.Controllers
                 {
                     OrderId = order.OrderId,
                     ProductId = item.ProductId,
-                    Quantity = (item.Quantity ?? 0),
-                    
+                    Quantity = (item.Quantity ??0),
+                    UnitPrice = item.Price
                 };
                 _context.OrderDetails.Add(detail);
+
+                // Optionally update product stock
+                var product = _context.Products.Find(item.ProductId);
+                if (product != null && product.Quantity.HasValue)
+                {
+                    product.Quantity = Math.Max(0, (product.Quantity ??0) - (item.Quantity ??0));
+                    _context.Products.Update(product);
+                }
             }
             _context.SaveChanges();
+
+            // Clear coupon from session after successful order
+            HttpContext.Session.Remove("AppliedCouponCode");
+            HttpContext.Session.Remove("AppliedCouponPercent");
 
             _cartService.ClearCart();
             TempData["SuccessMessage"] = "Order placed successfully!";
             return RedirectToAction("Success");
         }
+
         [HttpPost]
         public IActionResult CheckoutConfirm()
         {
@@ -112,7 +173,7 @@ namespace KILVRA.Controllers
             {
                 UserId = userId.Value,
                 OrderDate = DateTime.Now,
-                TotalAmount = cart.Sum(i => (i.Quantity ?? 0) * i.Price),
+                TotalAmount = cart.Sum(i => (i.Quantity ??0) * i.Price),
                 Status = "Pending"
             };
 
@@ -125,10 +186,17 @@ namespace KILVRA.Controllers
                 {
                     OrderId = order.OrderId,
                     ProductId = item.ProductId,
-                    Quantity = item.Quantity ?? 0,
+                    Quantity = item.Quantity ??0,
                     UnitPrice = item.Price
                 };
                 _context.OrderDetails.Add(detail);
+
+                var product = _context.Products.Find(item.ProductId);
+                if (product != null && product.Quantity.HasValue)
+                {
+                    product.Quantity = Math.Max(0, (product.Quantity ??0) - (item.Quantity ??0));
+                    _context.Products.Update(product);
+                }
             }
 
             _context.SaveChanges();
@@ -172,7 +240,7 @@ namespace KILVRA.Controllers
             return RedirectToAction("Index");
         }
         [HttpPost]
-        public IActionResult AddToCart(int id, int quantity = 1, string size = null)
+        public IActionResult AddToCart(int id, int quantity =1, string size = null)
         {
 
 
@@ -184,7 +252,7 @@ namespace KILVRA.Controllers
             }
 
             // Add to cart
-            if (quantity <= 0) quantity = 1;
+            if (quantity <=0) quantity =1;
             _cartService.AddToCart(id, quantity, size);
             TempData["SuccessMessage"] = "Added to cart successfully!";
 
@@ -221,16 +289,23 @@ namespace KILVRA.Controllers
                 return RedirectToAction("Index");
             }
 
-            // Example: calculate total and apply discount
-            decimal total = _cartService.GetTotal(); // your method to calculate total
-            decimal discountAmount = total * (coupon.DiscountPercent / 100);
+            // calculate totals from cart service
+            decimal subtotal = _cartService.GetSubtotal();
+            decimal shipping = _cartService.GetShippingFee();
+            decimal total = _cartService.GetTotal(); // subtotal + shipping normally
+            decimal discountAmount = total * (coupon.DiscountPercent /100);
             decimal finalTotal = total - discountAmount;
 
-            // Store the values in ViewBag or TempData
-            ViewBag.Total = total;
+            // Store the values in ViewBag for the Index view
+            ViewBag.Subtotal = subtotal;
+            ViewBag.Shipping = shipping;
             ViewBag.Discount = discountAmount;
-            ViewBag.FinalTotal = finalTotal;
+            ViewBag.Total = finalTotal;
             ViewBag.AppliedCoupon = coupon.Code;
+
+            // Persist coupon in session so it applies during checkout
+            HttpContext.Session.SetString("AppliedCouponCode", coupon.Code);
+            HttpContext.Session.SetString("AppliedCouponPercent", coupon.DiscountPercent.ToString());
 
             TempData["Success"] = $"Coupon '{coupon.Code}' applied successfully!";
 

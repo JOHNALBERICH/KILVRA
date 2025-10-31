@@ -26,8 +26,10 @@ public partial class User
 
     public DateTime? CreatedAt { get; set; } =DateTime.Now;
 
+    [StringLength(100)]
+    public string? Provider { get; set; }
     public virtual Admin? Admin { get; set; }
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
-    public ICollection<Favorite> Favorites { get; set; }
+    public virtual ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
 }

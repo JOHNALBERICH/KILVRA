@@ -44,7 +44,7 @@ namespace KILVRA.Controllers
         
          // Show all products
         [HttpGet]
-        public IActionResult Index(string searchQuery, string priceRange, string size)
+        public IActionResult Index(string searchQuery, string priceRange, string size, string sort)
         {
             var products = _context.Products
          .Include(p => p.Category)
@@ -85,6 +85,33 @@ namespace KILVRA.Controllers
             else
             {
                 ViewBag.SelectedSize = "";
+            }
+
+            // Sorting
+            ViewBag.Sort = sort ?? "";
+            if (!string.IsNullOrEmpty(sort))
+            {
+                switch (sort.ToLowerInvariant())
+                {
+                    case "latest":
+                        products = products.OrderByDescending(p => p.CreatedAt);
+                        break;
+                    case "price_asc":
+                        products = products.OrderBy(p => p.Price);
+                        break;
+                    case "price_desc":
+                        products = products.OrderByDescending(p => p.Price);
+                        break;
+                    // add more sorting options (popularity, rating) when implemented
+                    default:
+                        products = products.OrderByDescending(p => p.CreatedAt);
+                        break;
+                }
+            }
+            else
+            {
+                // default ordering
+                products = products.OrderByDescending(p => p.CreatedAt);
             }
 
             return View(products.Include(p => p.Shop).ToList());

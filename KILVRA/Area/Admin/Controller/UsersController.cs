@@ -142,6 +142,45 @@ namespace KILVRA.Area.Admin.Controller
             var user = await _context.Users.FindAsync(id);
             if (user != null)
             {
+                // Remove favorites
+                var favorites = _context.Favorites.Where(f => f.UserId == id).ToList();
+                if (favorites.Any())
+                {
+                    _context.Favorites.RemoveRange(favorites);
+                }
+
+                // Remove orders (and related order details and payments)
+                var orders = _context.Orders
+                    .Where(o => o.UserId == id)
+                    .Include(o => o.OrderDetails!)
+                    .Include(o => o.Payment)
+                    .ToList();
+
+                foreach (var order in orders)
+                {
+                    // remove order details
+                    if (order.OrderDetails != null && order.OrderDetails.Any())
+                    {
+                        _context.OrderDetails.RemoveRange(order.OrderDetails);
+                    }
+                    // remove payment
+                    if (order.Payment != null)
+                    {
+                        _context.Payments.Remove(order.Payment);
+                    }
+                    // remove order
+                    _context.Orders.Remove(order);
+                }
+
+                // If user has an Admin entry, remove it
+                var admin = _context.Admins.FirstOrDefault(a => a.UserId == id);
+                if (admin != null)
+                {
+                    // Optionally handle Shops belonging to admin if needed
+                    _context.Admins.Remove(admin);
+                }
+
+                // Finally remove user
                 _context.Users.Remove(user);
             }
 

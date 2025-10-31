@@ -10,6 +10,7 @@ using KILVRA.Models;
 
 namespace KILVRA.Area.Admin.Controller
 {
+    [Area("Admin")]
     public class CouponsController : Microsoft.AspNetCore.Mvc.Controller
     {
         private readonly OnlineClothesShopContext _context;

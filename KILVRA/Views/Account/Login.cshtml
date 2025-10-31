@@ -1,25 +1,73 @@
-﻿    @*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+﻿@*
+For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
 @{
     ViewData["Title"] = "Login";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<h2>Login</h2>
 
-<form asp-action="Login" method="post">
-    <div class="form-group">
-        <label>Email</label>
-        <input name="email" type="email" class="form-control" required />
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-6">
+            <h2 class="mb-4 text-center">Login</h2>
+
+            @if (TempData["SuccessMessage"] != null || TempData["ErrorMessage"] != null)
+            {
+                <div class="mb-3">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success flash-message" role="alert">@TempData["SuccessMessage"]</div>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger flash-message" role="alert">@TempData["ErrorMessage"]</div>
+                    }
+                </div>
+            }
+
+            <form asp-action="Login" method="post">
+                @Html.AntiForgeryToken()
+                <div class="form-group mb-3">
+                    <label>Email</label>
+                    <input name="email" type="email" class="form-control" required />
+                </div>
+                <div class="form-group mb-3">
+                    <label>Password</label>
+                    <input name="password" type="password" class="form-control" required />
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <button type="submit" class="btn btn-primary">Login</button>
+                    <a asp-action="Register">Don't have account ?</a>
+                </div>
+
+                <div class="mb-3">
+                    <a asp-action="ForgotPassword" class="btn btn-link">Forgot Password</a>
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-center gap-2">
+                    <a class="btn btn-danger w-100" asp-controller="Account" asp-action="GoogleLogin">
+                        <i class="bi bi-google"></i> Login with Google
+                    </a>
+                  
+                </div>
+            </form>
+        </div>
     </div>
-    <div class="form-group">
-        <label>Password</label>
-        <input name="password" type="password" class="form-control" required />
-    </div>
-    <button type="submit" class="btn btn-primary">Login</button>
-</form>
-    <button type="reset" class="btn btn-secondary">Forgot Password</button>
-    <a asp-action="Register" >Already have account ?</a>
-<hr />
-<a asp-action="GoogleLogin" class="btn btn-danger">Login with Google</a>
-<a href="#" class="btn btn-primary">Login with Facebook</a>
+</div>
+
+@section Scripts {
+    <script>
+        // Fade out any flash messages after 3 seconds
+        setTimeout(function() {
+            var msgs = document.querySelectorAll('.flash-message');
+            msgs.forEach(function(m) {
+                m.style.transition = 'opacity 0.5s ease';
+                m.style.opacity = '0';
+                setTimeout(function() { m.remove(); }, 500);
+            });
+        }, 3000);
+    </script>
+}

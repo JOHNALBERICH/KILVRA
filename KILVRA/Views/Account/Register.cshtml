@@ -1,38 +1,73 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@model KILVRA.Models.User
+﻿@model KILVRA.Models.User
 @{
-    ViewData["Title"] = "Register";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+ ViewData["Title"] = "Register";
+ Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<h2>Register</h2>
 
-<form asp-action="Register" asp-controller="Account" method="post">
-    <div class="form-group">
-        <label>Full Name</label>
-        <input asp-for="FullName" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label>Email</label>
-        <input asp-for="Email" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label>Password</label>
-        <input name="password" type="password" class="form-control" required />
-    </div>
-    <div class="form-group">
-        <label>Phone number</label>
-        <input asp-for="Phone" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label>Address</label>
-        <input asp-for="Address" class="form-control" />
-    </div>
-    <button type="submit" class="btn btn-success">Register</button>
-    <a asp-action="Login">Don't have account ?</a>
-</form>
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
-<div asp-validation-summary="All" class="text-danger"></div>
+<div class="container py-5">
+ <div class="row justify-content-center">
+ <div class="col-12 col-md-6">
+ <h2 class="mb-4 text-center">Register</h2>
+
+ @if (TempData["SuccessMessage"] != null || TempData["ErrorMessage"] != null)
+ {
+ <div class="mb-3">
+ @if (TempData["SuccessMessage"] != null)
+ {
+ <div class="alert alert-success flash-message" role="alert">@TempData["SuccessMessage"]</div>
+ }
+ @if (TempData["ErrorMessage"] != null)
+ {
+ <div class="alert alert-danger flash-message" role="alert">@TempData["ErrorMessage"]</div>
+ }
+ </div>
+ }
+
+ <form asp-action="Register" asp-controller="Account" method="post">
+ @Html.AntiForgeryToken()
+
+ <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+ <div class="form-group mb-3">
+ <label>Full Name</label>
+ <input asp-for="FullName" class="form-control" />
+ </div>
+ <div class="form-group mb-3">
+ <label>Email</label>
+ <input asp-for="Email" class="form-control" />
+ </div>
+ <div class="form-group mb-3">
+ <label>Password</label>
+ <input name="password" type="password" class="form-control" required />
+ </div>
+ <div class="form-group mb-3">
+ <label>Phone number</label>
+ <input asp-for="Phone" class="form-control" />
+ </div>
+ <div class="form-group mb-4">
+ <label>Address</label>
+ <input asp-for="Address" class="form-control" />
+ </div>
+
+ <div class="d-flex align-items-center gap-3">
+ <button type="submit" class="btn btn-success">Register</button>
+ <a asp-action="Login">Already have account ?</a>
+ </div>
+ </form>
+
+ @section Scripts {
+ <partial name="_ValidationScriptsPartial" />
+ <script>
+ setTimeout(function() {
+ var msgs = document.querySelectorAll('.flash-message');
+ msgs.forEach(function(m) {
+ m.style.transition = 'opacity0.5s ease';
+ m.style.opacity = '0';
+ setTimeout(function() { m.remove(); },500);
+ });
+ },3000);
+ </script>
+ }
+ </div>
+ </div>
+</div>

@@ -1,12 +1,13 @@
+using KILVRA.Area.Admin.AdminServices;
 using KILVRA.Models;
 using KILVRA.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.IO;
-using Microsoft.AspNetCore.Identity;
-
+using Microsoft.AspNetCore.Authentication.Google;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,7 @@ builder.Services.AddDbContext<OnlineClothesShopContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
+builder.Services.AddSingleton<GoogleAnalyticsService>();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -38,27 +39,34 @@ builder.Services.AddDataProtection()
     .SetApplicationName("KILVRAApp");
 //builder.Services.AddIdentity<User, Admin>()
 //    .AddEntityFrameworkStores<OnlineClothesShopContext>()
- //   .AddDefaultTokenProviders();
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.LoginPath = "/Admin/Account/Login";
-    options.AccessDeniedPath = "/Admin/Account/AccessDenied";
-});
+//   .AddDefaultTokenProviders();
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Account/Login";
-        options.LogoutPath = "/Account/Logout";
-    });
-builder.Services.AddAuthentication("MyCookieAuth")
-    .AddCookie("MyCookieAuth", options =>
-    {
-        options.Cookie.Name = "KILVRA.Auth";
-        options.ExpireTimeSpan = TimeSpan.FromDays(30);
-        options.SlidingExpiration = true; // refresh expiration while user is active
-        options.LoginPath = "/Account/Login";
-    });
+// Consolidated authentication registration: set default cookie scheme and also register a named cookie ('MyCookieAuth').
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+})
+.AddCookie(options =>
+{
+    // Default cookie settings
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
+})
+.AddCookie("MyCookieAuth", options =>
+{
+    // Named cookie for custom auth usages
+    options.Cookie.Name = "KILVRA.Auth";
+    options.ExpireTimeSpan = TimeSpan.FromDays(30);
+    options.SlidingExpiration = true;
+    options.LoginPath = "/Account/Login";
+})
+.AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+{
+    options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+});
 
 var app = builder.Build();
 
@@ -80,13 +88,11 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 // Area route: correct default controller name and also support URLs that include the literal 'Area' prefix
-app.MapControllerRoute(
-    name: "areas_with_area_prefix",
-    pattern: "Area/{area:exists}/{controller=Dashboards}/{action=Index}/{id?}");
+
 
 app.MapControllerRoute(
     name: "areas",
-    pattern: "{area:exists}/{controller=Dashboards}/{action=Index}/{id?}");
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")

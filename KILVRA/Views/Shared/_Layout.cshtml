@@ -1,5 +1,4 @@
-﻿
-@{
+﻿@{
 	var userName = Context.Session.GetString("UserName");
 	@inject KILVRA.Models.OnlineClothesShopContext _context
 	
@@ -71,13 +70,15 @@
 					</a>
 				</div>
 				<div class="col-lg-6 col-6 text-left">
-					<form action="">
+					<form asp-controller="Shop" asp-action="Index" method="get">
 						<div class="input-group">
-							<input type="text" class="form-control" placeholder="Search for products">
+							<input type="text" name="searchQuery" value="@ViewBag.SearchQuery" class="form-control" placeholder="Search for products">
 							<div class="input-group-append">
-								<span class="input-group-text bg-transparent text-primary">
-									<i class="fa fa-search"></i>
-								</span>
+								<button class="btn" type="submit">
+									<span class="input-group-text bg-transparent text-primary">
+										<i class="fa fa-search"></i>
+									</span>
+								</button>
 							</div>
 						</div>
 					</form>
@@ -99,12 +100,12 @@
 		<div class="container-fluid mb-5">
 			<div class="row border-top px-xl-5">
 				<div class="col-lg-3 d-none d-lg-block">
-					<a class="btn shadow-none d-flex align-items-center justify-content-between bg-primary text-white w-100" data-toggle="collapse" href="#navbar-vertical" style="height: 65px; margin-top: -1px; padding: 0 30px;">
+					<a class="btn shadow-none d-flex align-items-center justify-content-between bg-primary text-white w-100" data-toggle="collapse" href="#navbar-vertical" style="height:65px; margin-top: -1px; padding:030px;">
 						<h6 class="m-0">Categories</h6>
 						<i class="fa fa-angle-down text-dark"></i>
 					</a>
 					<nav class="collapse show navbar navbar-vertical navbar-light align-items-start p-0 border border-top-0 border-bottom-0" id="navbar-vertical">
-						<div class="navbar-nav w-100 overflow-hidden" style="height: 410px">
+						<div class="navbar-nav w-100 overflow-hidden" style="height:410px">
 							@foreach (var category in _context.Categories.ToList())
 							{
 								<a asp-controller="Shop" asp-action="ByCategory" asp-route-categoryId="@category.CategoryId" class="nav-item nav-link">

@@ -2,6 +2,15 @@
 
 @{
     ViewData["Title"] = "Index";
+    var currentSort = (ViewBag.Sort ?? string.Empty).ToString();
+    string sortLabel = "Sort by";
+    if (!string.IsNullOrEmpty(currentSort))
+    {
+        if (currentSort.Equals("latest", StringComparison.OrdinalIgnoreCase)) sortLabel = "Latest";
+        else if (currentSort.Equals("price_asc", StringComparison.OrdinalIgnoreCase)) sortLabel = "Price: Low to High";
+        else if (currentSort.Equals("price_desc", StringComparison.OrdinalIgnoreCase)) sortLabel = "Price: High to Low";
+        else sortLabel = currentSort;
+    }
 }
 
 @*<h1>Index</h1>
@@ -165,12 +174,13 @@
                         <div class="dropdown ml-4">
                             <button class="btn border dropdown-toggle" type="button" id="triggerId" data-toggle="dropdown" aria-haspopup="true"
                                     aria-expanded="false">
-                                Sort by
+                                @sortLabel
                             </button>
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="triggerId">
-                                <a class="dropdown-item" href="#">Latest</a>
-                                <a class="dropdown-item" href="#">Popularity</a>
-                                <a class="dropdown-item" href="#">Best Rating</a>
+                                <a class="dropdown-item" asp-action="Index" asp-route-sort="latest" asp-route-searchQuery="@ViewBag.SearchQuery" asp-route-priceRange="@ViewBag.SelectedPriceRange" asp-route-size="@ViewBag.SelectedSize">Latest</a>
+                                
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" asp-action="Index" asp-route-sort="" asp-route-searchQuery="@ViewBag.SearchQuery" asp-route-priceRange="@ViewBag.SelectedPriceRange" asp-route-size="@ViewBag.SelectedSize">Clear Sort</a>
                             </div>
                         </div>
                     </div>
